@@ -228,10 +228,10 @@ h2 {
     </style>
 </head>
 <body>
-
-
-<input type="file" id="fileInput" />
-<button onclick="loadDefaultExcel()">加载默认数据</button>
+<div id="topStatus" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+    <div>当前时间：<span id="currentTime"></span></div>
+    <div>数据状态：<span id="dataStatus">未加载</span></div>
+</div>
 
 <br><br>
 <table style="margin-bottom:10px; text-align:left;">
@@ -441,7 +441,6 @@ let rawData = [];
 let categoryList = [];
 
 
-document.getElementById('fileInput').addEventListener('change', handleFile);
 
 function loadDefaultExcel() {
     fetch('./物资详细.xlsx')
@@ -463,10 +462,12 @@ function loadDefaultExcel() {
             initCategory();
             initAreaAndPeople();
             initSiteData();
+            document.getElementById('dataStatus').innerText = '已加载';
         })
         .catch(err => {
             alert('默认Excel加载失败，请检查文件路径');
             console.error(err);
+            document.getElementById('dataStatus').innerText = '加载失败';
         });
 }
 
@@ -893,6 +894,19 @@ window.addEventListener('load', function() {
     if (!input.value) {
         setNowTime();
     }
+
+    function updateClock() {
+        const now = new Date();
+        const str = now.getFullYear() + '-' +
+            String(now.getMonth()+1).padStart(2,'0') + '-' +
+            String(now.getDate()).padStart(2,'0') + ' ' +
+            String(now.getHours()).padStart(2,'0') + ':' +
+            String(now.getMinutes()).padStart(2,'0') + ':' +
+            String(now.getSeconds()).padStart(2,'0');
+        document.getElementById('currentTime').innerText = str;
+    }
+    updateClock();
+    setInterval(updateClock,1000);
 
     // 自动加载默认Excel
     loadDefaultExcel();
