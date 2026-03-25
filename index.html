@@ -2,6 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>物资选择系统</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
@@ -210,19 +211,37 @@ h2 {
     font-size: 18px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     body {
-        padding: 5px;
+        padding: 8px;
+        font-size: 16px;
+    }
+
+    table {
+        font-size: 14px;
     }
 
     th, td {
-        padding: 3px;
-        font-size: 12px;
+        padding: 6px;
     }
 
     select, input {
-        height: 28px;
-        font-size: 12px;
+        height: 36px;
+        font-size: 16px;
+    }
+
+    button {
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .person {
+        width: 100px;
+        height: 36px;
+    }
+
+    textarea {
+        font-size: 16px;
     }
 }
     </style>
@@ -234,7 +253,8 @@ h2 {
 </div>
 
 <br><br>
-<table style="margin-bottom:10px; text-align:left;">
+<div style="overflow-x:auto;">
+<table style="margin-bottom:10px; text-align:left; min-width:600px;">
     <tbody>
         <tr>
             <td style="width:60px; text-align:left;">区分：</td>
@@ -295,9 +315,11 @@ h2 {
             </td>
         </tr>
     </tbody>
-</table>
+<\/table>
+</div>
 
-<table>
+<div style="overflow-x:auto;">
+<table style="min-width:700px;">
     <thead>
         <tr>
             <th>序号</th>
@@ -344,7 +366,8 @@ h2 {
             <td colspan="8" style="text-align:center; cursor:pointer;" onclick="addRow()">插入一条</td>
         </tr>
     </tbody>
-</table>
+<\/table>
+</div>
 
 <table style="margin-top:12px; margin-bottom:10px; border-collapse:collapse;">
     <tr>
