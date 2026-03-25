@@ -2,6 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>物资选择系统</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
@@ -76,7 +77,7 @@ tr.data-row {
 
 select, input {
     width: 100%;
-    height: 26px;
+    height: 32px;
     box-sizing: border-box;
     font-size: 14px;
     padding: 2px 4px;
@@ -189,8 +190,8 @@ select option {
 
 textarea {
     width: 100%;
+    font-size: 16px;
     box-sizing: border-box;
-    font-size: 14px;
     resize: vertical;
     min-height: 32px;
 }
@@ -212,17 +213,31 @@ h2 {
 
 @media (max-width: 600px) {
     body {
-        padding: 5px;
+        padding: 6px;
+        font-size: 16px;
+    }
+
+    table {
+        font-size: 14px;
     }
 
     th, td {
-        padding: 3px;
-        font-size: 12px;
+        padding: 6px;
+        font-size: 14px;
     }
 
-    select, input {
-        height: 28px;
-        font-size: 12px;
+    select, input, button {
+        height: 36px;
+        font-size: 16px;
+    }
+
+    .person {
+        width: 90px;
+    }
+
+    button {
+        padding: 6px 8px;
+        font-size: 14px;
     }
 }
     </style>
@@ -443,32 +458,85 @@ let categoryList = [];
 
 
 function loadDefaultExcel() {
-    fetch('https://cdn.jsdelivr.net/gh/hxf6276/zhengliyongliang@main/data.xlsx')
-        .then(res => res.arrayBuffer())
-        .then(data => {
-            const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
+    const dataStatusEl = document.getElementById('dataStatus');
+    const CACHE_KEY = 'excel_cache_v1';
 
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const urls = [
+        './data.xlsx',
+        'https://raw.githubusercontent.com/hxf6276/zhengliyongliang/main/data.xlsx'
+    ];
 
-            rawData = json.slice(1);
+    function parseAndInit(arrayBuffer) {
+        const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
 
-            const set = new Set();
-            rawData.forEach(r => { if (r[0]) set.add(String(r[0]).trim()); });
-            categoryList = Array.from(set);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-            window.workbook = workbook;
+        rawData = json.slice(1);
 
-            initCategory();
-            initAreaAndPeople();
-            initSiteData();
-            document.getElementById('dataStatus').innerText = '已加载';
-        })
-        .catch(err => {
-            alert('默认Excel加载失败，请检查文件路径');
-            console.error(err);
-            document.getElementById('dataStatus').innerText = '加载失败';
-        });
+        const set = new Set();
+        rawData.forEach(r => { if (r[0]) set.add(String(r[0]).trim()); });
+        categoryList = Array.from(set);
+
+        window.workbook = workbook;
+
+        initCategory();
+        initAreaAndPeople();
+        initSiteData();
+
+        dataStatusEl.innerText = '已加载';
+        dataStatusEl.style.color = 'green';
+
+        // 缓存
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(rawData));
+        } catch (e) {}
+    }
+
+    function tryFetch(i, retry = 0) {
+        if (i >= urls.length) {
+            // 尝试用缓存
+            const cache = localStorage.getItem(CACHE_KEY);
+            if (cache) {
+                rawData = JSON.parse(cache);
+                const set = new Set();
+                rawData.forEach(r => { if (r[0]) set.add(String(r[0]).trim()); });
+                categoryList = Array.from(set);
+
+                initCategory();
+
+                dataStatusEl.innerText = '已加载（缓存）';
+                dataStatusEl.style.color = 'orange';
+                return;
+            }
+
+            dataStatusEl.innerText = '加载失败';
+            dataStatusEl.style.color = 'red';
+            alert('数据加载失败，请检查网络');
+            return;
+        }
+
+        fetch(urls[i])
+            .then(res => {
+                if (!res.ok) throw new Error('network error');
+                return res.arrayBuffer();
+            })
+            .then(data => {
+                parseAndInit(data);
+            })
+            .catch(() => {
+                if (retry < 2) {
+                    setTimeout(() => tryFetch(i, retry + 1), 1000);
+                } else {
+                    tryFetch(i + 1, 0);
+                }
+            });
+    }
+
+    dataStatusEl.innerText = '加载中...';
+    dataStatusEl.style.color = '#333';
+
+    tryFetch(0);
 }
 
 function handleFile(e) {
