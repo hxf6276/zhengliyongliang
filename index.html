@@ -443,7 +443,7 @@ let categoryList = [];
 
 
 function loadDefaultExcel() {
-    fetch('./物资详细.xlsx')
+    fetch('./data.xlsx')
         .then(res => res.arrayBuffer())
         .then(data => {
             const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
