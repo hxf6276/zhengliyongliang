@@ -452,92 +452,40 @@ function updatePersonOptions() {
         sel.value = currentValue || '';
     });
 }
-let rawData = [];
-let categoryList = [];
+let rawData = [
+["电池","华为","100AH","节"],
+["电池","海四达","50AH","节"],
+["电池","浙江南都","50AH","节"],
+["动环","标准型","FSU","套"],
+["动环","微站型","FSU","套"],
+["小微电源","赤勇星","150A","台"],
+["小微电源","常州太平","150A","台"],
+["小微电源","通鼎","150A","台"],
+["开关电源","华为","150A","台"],
+["开关电源","华为","200A","台"],
+["开关电源","华为","300A","台"],
+["开关电源","华为","450A","台"],
+["开关电源","中兴","150A","台"],
+["开关电源","中兴","200A","台"],
+["开关电源","中兴","300A","台"],
+["开关电源","中兴","450A","台"],
+["开关电源","中天","150A","台"],
+["开关电源","中天","200A","台"],
+["开关电源","中天","300A","台"],
+["开关电源","中天","450A","台"],
+["室外壁挂","华为","150A","台"],
+["室外壁挂","中兴","150A","台"],
+["室外壁挂","动力源","150A","台"],
+["机柜","通鼎","综合柜","台"],
+["机柜","汇珏","大机柜","台"],
+["直流","华为","直流配电单元","个"],
+["直流","中天","直流配电单元","个"],
+["直流","中兴","直流配电单元","个"],
+["电力电缆","电力电缆","1*35红","米"],
+["电力电缆","电力电缆","1*35黄绿","米"]
+];
 
-
-
-function loadDefaultExcel() {
-    const dataStatusEl = document.getElementById('dataStatus');
-    const CACHE_KEY = 'excel_cache_v1';
-
-    const urls = [
-        './data.xlsx',
-        'https://raw.githubusercontent.com/hxf6276/zhengliyongliang/main/data.xlsx'
-    ];
-
-    function parseAndInit(arrayBuffer) {
-        const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
-
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-        rawData = json.slice(1);
-
-        const set = new Set();
-        rawData.forEach(r => { if (r[0]) set.add(String(r[0]).trim()); });
-        categoryList = Array.from(set);
-
-        window.workbook = workbook;
-
-        initCategory();
-        initAreaAndPeople();
-        initSiteData();
-
-        dataStatusEl.innerText = '已加载';
-        dataStatusEl.style.color = 'green';
-
-        // 缓存
-        try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(rawData));
-        } catch (e) {}
-    }
-
-    function tryFetch(i, retry = 0) {
-        if (i >= urls.length) {
-            // 尝试用缓存
-            const cache = localStorage.getItem(CACHE_KEY);
-            if (cache) {
-                rawData = JSON.parse(cache);
-                const set = new Set();
-                rawData.forEach(r => { if (r[0]) set.add(String(r[0]).trim()); });
-                categoryList = Array.from(set);
-
-                initCategory();
-
-                dataStatusEl.innerText = '已加载（缓存）';
-                dataStatusEl.style.color = 'orange';
-                return;
-            }
-
-            dataStatusEl.innerText = '加载失败';
-            dataStatusEl.style.color = 'red';
-            alert('数据加载失败，请检查网络');
-            return;
-        }
-
-        fetch(urls[i])
-            .then(res => {
-                if (!res.ok) throw new Error('network error');
-                return res.arrayBuffer();
-            })
-            .then(data => {
-                parseAndInit(data);
-            })
-            .catch(() => {
-                if (retry < 2) {
-                    setTimeout(() => tryFetch(i, retry + 1), 1000);
-                } else {
-                    tryFetch(i + 1, 0);
-                }
-            });
-    }
-
-    dataStatusEl.innerText = '加载中...';
-    dataStatusEl.style.color = '#333';
-
-    tryFetch(0);
-}
+let categoryList = Array.from(new Set(rawData.map(r=>r[0])));
 
 function handleFile(e) {
     const file = e.target.files[0];
@@ -976,8 +924,10 @@ window.addEventListener('load', function() {
     updateClock();
     setInterval(updateClock,1000);
 
-    // 自动加载默认Excel
-    loadDefaultExcel();
+    initCategory();
+    initAreaAndPeople();
+    initSiteData();
+    document.getElementById('dataStatus').innerText='已加载（本地）';
 });
 
 let areaList = [];
@@ -985,80 +935,51 @@ let peopleList = [];
 let siteList = [];
 
 function initAreaAndPeople() {
-    const sheet = workbook.Sheets["人员及区域"];
-    if (!sheet) return;
-
-    const data = XLSX.utils.sheet_to_json(sheet, { header: 1 }).slice(1);
-
-    const areaSet = new Set();
-    const peopleSet = new Set();
-
-    data.forEach(row => {
-        if (row[0]) areaSet.add(row[0]);
-        if (row[1]) peopleSet.add(row[1]);
-    });
-
-    areaList = Array.from(areaSet);
-    peopleList = Array.from(peopleSet);
+    areaList = ["青浦","嘉定","南区","松江","金山","西区","浦东","闵行","北区","宝山","奉贤","崇明"];
+    peopleList = ["范剑","李慕杰","何小平","倪东","邓世佩","滕宇翔","周嘉明","倪长锁","张志林","胡荣海","王成武","张光涛","辛伟","朱成龙","丁统治","李子轩"];
 
     const areaSelect = document.getElementById('area');
     areaSelect.innerHTML = '<option value="">请选择</option>';
-    areaList.forEach(a => {
-        const op = document.createElement('option');
-        op.value = a;
-        op.text = a;
+    areaList.forEach(a=>{
+        const op=document.createElement('option');
+        op.value=a;op.text=a;
         areaSelect.appendChild(op);
     });
 
-    const selects = document.querySelectorAll('.person');
-    selects.forEach(sel => {
-        sel.innerHTML = '<option value="">请选择</option>';
-        // 增加手动输入选项
-        const customOption = document.createElement('option');
-        customOption.value = '__custom__';
-        customOption.text = '手动输入';
-        sel.appendChild(customOption);
-        peopleList.forEach(p => {
-            const op = document.createElement('option');
-            op.value = p;
-            op.text = p;
+    document.querySelectorAll('.person').forEach(sel=>{
+        sel.innerHTML='<option value="">请选择</option>';
+        peopleList.forEach(p=>{
+            const op=document.createElement('option');
+            op.value=p;op.text=p;
             sel.appendChild(op);
         });
         enableCustomInput(sel);
-        sel.onchange = function() {
-            updatePersonOptions();
-        };
+        sel.onchange=updatePersonOptions;
     });
+
     updatePersonOptions();
 }
 
 function initSiteData() {
-    const sheet = workbook.Sheets["站点信息"];
-    if (!sheet) return;
+    siteList = [
+        {A:"青浦区西部",B:"移动青金地",C:"310118908000000601"},
+        {A:"青浦区西部",B:"青南圩",C:"310118500000000167"},
+        {A:"嘉定区南部",B:"联通科福",C:"31011401000184"}
+    ];
 
-    const data = XLSX.utils.sheet_to_json(sheet, { header: 1 }).slice(1);
+    const input=document.getElementById('siteName');
 
-    siteList = data.map(row => ({
-        A: row[0],
-        B: row[1],
-        C: row[2]
-    }));
-
-    const input = document.getElementById('siteName');
-
-    const datalist = document.createElement('datalist');
-    datalist.id = "siteList";
+    const datalist=document.createElement('datalist');
+    datalist.id="siteList";
     document.body.appendChild(datalist);
 
-    datalist.innerHTML = siteList.map(s => `<option value="${s.B}">`).join('');
-    input.setAttribute('list', 'siteList');
+    datalist.innerHTML=siteList.map(s=>`<option value="${s.B}">`).join('');
+    input.setAttribute('list','siteList');
 
-    input.addEventListener('input', function() {
-        const val = this.value;
-        const found = siteList.find(s => s.B === val);
-
-        document.getElementById('siteA').innerText = found ? found.A : '';
-        document.getElementById('siteC').innerText = found ? found.C : '';
+    input.addEventListener('input',function(){
+        const found=siteList.find(s=>s.B===this.value);
+        document.getElementById('siteA').innerText=found?found.A:'';
+        document.getElementById('siteC').innerText=found?found.C:'';
     });
 }
 function addPerson() {
