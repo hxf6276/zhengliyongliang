@@ -231,6 +231,7 @@ h2 {
 
 
 <input type="file" id="fileInput" />
+<button onclick="loadDefaultExcel()">加载默认数据</button>
 
 <br><br>
 <table style="margin-bottom:10px; text-align:left;">
@@ -439,7 +440,35 @@ function updatePersonOptions() {
 let rawData = [];
 let categoryList = [];
 
+
 document.getElementById('fileInput').addEventListener('change', handleFile);
+
+function loadDefaultExcel() {
+    fetch('./物资详细.xlsx')
+        .then(res => res.arrayBuffer())
+        .then(data => {
+            const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
+
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            rawData = json.slice(1);
+
+            const set = new Set();
+            rawData.forEach(r => { if (r[0]) set.add(String(r[0]).trim()); });
+            categoryList = Array.from(set);
+
+            window.workbook = workbook;
+
+            initCategory();
+            initAreaAndPeople();
+            initSiteData();
+        })
+        .catch(err => {
+            alert('默认Excel加载失败，请检查文件路径');
+            console.error(err);
+        });
+}
 
 function handleFile(e) {
     const file = e.target.files[0];
@@ -864,6 +893,9 @@ window.addEventListener('load', function() {
     if (!input.value) {
         setNowTime();
     }
+
+    // 自动加载默认Excel
+    loadDefaultExcel();
 });
 
 let areaList = [];
